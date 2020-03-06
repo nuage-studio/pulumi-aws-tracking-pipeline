@@ -1,0 +1,3 @@
+name: aws-tracking-pipeline
+runtime: python
+description: Nuage AWS Tracking Pipeline
