@@ -5,9 +5,13 @@ from firehosePolicy import (
     getFirehoseRolePolicyDocument,
     getFirehoseRoleTrustPolicyDocument,
 )
+from pinpointPolicy import (
+    get_pinpoint_stream_role_policy_document,
+    get_pinpoint_stream_role_trust_policy_document,
+)
 from pulumi.output import Output
 from pulumi.resource import ResourceOptions
-from pulumi_aws import config, iam, kinesis, s3
+from pulumi_aws import config, iam, kinesis, pinpoint, s3
 from pulumi_aws.get_caller_identity import get_caller_identity
 
 
@@ -24,39 +28,78 @@ class Analytics(pulumi.ComponentResource):
     """
 
     def __init__(self, name, opts=None):
-        super().__init__("nuage:aws:Analytics2", name, None, opts)
+        super().__init__("nuage:aws:Analytics", name, None, opts)
 
         accountId = get_caller_identity().account_id
         region = config.region
 
         bucket = s3.Bucket(f"{name}Bucket")
 
-        firehoseRole = iam.Role(
+        firehose_role = iam.Role(
             f"{name}FirehoseRole",
             assume_role_policy=getFirehoseRoleTrustPolicyDocument(accountId),
         )
 
-        deliveryStream = kinesis.FirehoseDeliveryStream(
+        delivery_stream = kinesis.FirehoseDeliveryStream(
             f"{name}DeliveryStream",
             destination="extended_s3",
             extended_s3_configuration={
                 "bucketArn": bucket.arn,
-                "role_arn": firehoseRole.arn,
+                "role_arn": firehose_role.arn,
                 "compressionFormat": "GZIP",
             },
-            opts=ResourceOptions(depends_on=[bucket]),
+            opts=ResourceOptions(depends_on=[bucket, firehose_role]),
         )
 
-        firehoseRolePolicy = iam.RolePolicy(
+        firehose_role_policy = iam.RolePolicy(
             f"{name}DeliveryStreamPolicy",
-            role=firehoseRole.name,
+            role=firehose_role.name,
             policy=getFirehoseRolePolicyDocument(
-                region, accountId, bucket.arn, deliveryStream.name
+                region, accountId, bucket.arn, delivery_stream.name
             ).apply(json.dumps),
         )
 
+        pinpoint_stream_role = iam.Role(
+            f"{name}PinpointStreamRole",
+            assume_role_policy=get_pinpoint_stream_role_trust_policy_document(),
+        )
+
+        pinpoint_stream_role_policy = iam.RolePolicy(
+            f"{name}PinpointStreamPolicy",
+            role=pinpoint_stream_role.name,
+            policy=get_pinpoint_stream_role_policy_document(
+                region, accountId, delivery_stream.name
+            ).apply(json.dumps),
+            opts=ResourceOptions(depends_on=[pinpoint_stream_role, delivery_stream]),
+        )
+
+        pinpoint_app = pinpoint.App(
+            f"{name}PinpointApp",
+            opts=ResourceOptions(depends_on=[pinpoint_stream_role_policy]),
+        )
+
+        pinpoint_stream = pinpoint.EventStream(
+            f"{name}PinpointEventStream",
+            application_id=pinpoint_app.application_id,
+            destination_stream_arn=delivery_stream.arn,
+            role_arn=pinpoint_stream_role.arn,
+            opts=ResourceOptions(
+                depends_on=[
+                    delivery_stream,
+                    pinpoint_app,
+                    pinpoint_stream_role,
+                    pinpoint_stream_role_policy,
+                ]
+            ),
+        )
+
         self.set_outputs(
-            {"bucket_name": bucket.id, "delivery_stream_name": deliveryStream.name}
+            {
+                "bucket_name": bucket.id,
+                "delivery_stream_name": delivery_stream.name,
+                "destination_stream_arn": delivery_stream.arn,
+                "role_arn": pinpoint_stream_role.arn,
+            }
         )
 
     def set_outputs(self, outputs: dict):

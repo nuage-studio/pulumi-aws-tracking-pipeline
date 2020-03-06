@@ -1,5 +1,4 @@
 import pulumi
-
 from Analytics import Analytics
 
 analytics = Analytics("MyAnalytics")
