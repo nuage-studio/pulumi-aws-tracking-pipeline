@@ -1,7 +1,7 @@
 import pulumi
 
 
-def getFirehoseRoleTrustPolicyDocument(accountId):
+def get_firehose_role_trust_policy_document(accountId):
     """Returns a trust (AssumeRole) policy allowing the firehose service for a given account"""
 
     return {
@@ -18,7 +18,7 @@ def getFirehoseRoleTrustPolicyDocument(accountId):
     }
 
 
-def applyFirehoseRolePolicyDocumentOutputs(bucketArn, deliveryStreamName, func):
+def apply_firehose_role_policy_document_outputs(bucketArn, deliveryStreamName, func):
     """ Applies the Pulumi outputs `bucketArn` and `deliveryStringName` to the
         given function.
 
@@ -31,7 +31,7 @@ def applyFirehoseRolePolicyDocumentOutputs(bucketArn, deliveryStreamName, func):
     )
 
 
-def getFirehoseRolePolicyDocument(
+def get_firehose_role_policy_document(
     region, accountId, bucketArnOutput, deliveryStreamNameOutput
 ):
     """ Returns a role permitting Firehose to read Dynamo tables and write to S3
@@ -41,7 +41,7 @@ def getFirehoseRolePolicyDocument(
         bucketArnOutput -- The destination bucket ARN as a Pulumi Output
         deliveryStreamNameOutput -- The name of the Firehose delivery stream as a Pulumi Output
     """
-    return applyFirehoseRolePolicyDocumentOutputs(
+    return apply_firehose_role_policy_document_outputs(
         bucketArnOutput,
         deliveryStreamNameOutput,
         lambda bucketArn, deliveryStreamName: {
