@@ -2,8 +2,8 @@ import json
 
 import pulumi
 from firehosePolicy import (
-    getFirehoseRolePolicyDocument,
-    getFirehoseRoleTrustPolicyDocument,
+    get_firehose_role_policy_document,
+    get_firehose_role_trust_policy_document,
 )
 from pinpointPolicy import (
     get_pinpoint_stream_role_policy_document,
@@ -37,7 +37,7 @@ class Analytics(pulumi.ComponentResource):
 
         firehose_role = iam.Role(
             f"{name}FirehoseRole",
-            assume_role_policy=getFirehoseRoleTrustPolicyDocument(accountId),
+            assume_role_policy=get_firehose_role_trust_policy_document(accountId),
         )
 
         delivery_stream = kinesis.FirehoseDeliveryStream(
@@ -54,7 +54,7 @@ class Analytics(pulumi.ComponentResource):
         firehose_role_policy = iam.RolePolicy(
             f"{name}DeliveryStreamPolicy",
             role=firehose_role.name,
-            policy=getFirehoseRolePolicyDocument(
+            policy=get_firehose_role_policy_document(
                 region, accountId, bucket.arn, delivery_stream.name
             ).apply(json.dumps),
         )
