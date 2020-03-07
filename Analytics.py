@@ -27,17 +27,32 @@ class Analytics(pulumi.ComponentResource):
     The name of the Kinesis Firehose stream which streams events from Pinpoint to S3.
     """
 
+    destination_stream_arn: Output[str]
+    """
+    The ARN of the Kinesis Firehose stream which streams events from Pinpoint to S3.
+    """
+
+    pinpoint_application_name: Output[str]
+    """
+    The Application name of the Pinpoint application for managing analytics.
+    """
+
+    pinpoint_application_id: Output[str]
+    """
+    The Application ID of the Pinpoint application for managing analytics.
+    """
+
     def __init__(self, name, opts=None):
         super().__init__("nuage:aws:Analytics", name, None, opts)
 
-        accountId = get_caller_identity().account_id
+        account_idd = get_caller_identity().account_id
         region = config.region
 
         bucket = s3.Bucket(f"{name}Bucket")
 
         firehose_role = iam.Role(
             f"{name}FirehoseRole",
-            assume_role_policy=get_firehose_role_trust_policy_document(accountId),
+            assume_role_policy=get_firehose_role_trust_policy_document(account_idd),
         )
 
         delivery_stream = kinesis.FirehoseDeliveryStream(
@@ -55,7 +70,7 @@ class Analytics(pulumi.ComponentResource):
             f"{name}DeliveryStreamPolicy",
             role=firehose_role.name,
             policy=get_firehose_role_policy_document(
-                region, accountId, bucket.arn, delivery_stream.name
+                region, account_idd, bucket.arn, delivery_stream.name
             ).apply(json.dumps),
         )
 
@@ -68,7 +83,7 @@ class Analytics(pulumi.ComponentResource):
             f"{name}PinpointStreamPolicy",
             role=pinpoint_stream_role.name,
             policy=get_pinpoint_stream_role_policy_document(
-                region, accountId, delivery_stream.name
+                region, account_idd, delivery_stream.name
             ).apply(json.dumps),
             opts=ResourceOptions(depends_on=[pinpoint_stream_role, delivery_stream]),
         )
@@ -98,7 +113,8 @@ class Analytics(pulumi.ComponentResource):
                 "bucket_name": bucket.id,
                 "delivery_stream_name": delivery_stream.name,
                 "destination_stream_arn": delivery_stream.arn,
-                "role_arn": pinpoint_stream_role.arn,
+                "pinpoint_application_name": pinpoint_app.name,
+                "pinpoint_application_id": pinpoint_app.application_id,
             }
         )
 
