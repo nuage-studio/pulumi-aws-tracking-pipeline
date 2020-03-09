@@ -45,14 +45,14 @@ class Analytics(pulumi.ComponentResource):
     def __init__(self, name, opts=None):
         super().__init__("nuage:aws:Analytics", name, None, opts)
 
-        account_idd = get_caller_identity().account_id
+        account_id = get_caller_identity().account_id
         region = config.region
 
         bucket = s3.Bucket(f"{name}Bucket")
 
         firehose_role = iam.Role(
             f"{name}FirehoseRole",
-            assume_role_policy=get_firehose_role_trust_policy_document(account_idd),
+            assume_role_policy=get_firehose_role_trust_policy_document(account_id),
         )
 
         delivery_stream = kinesis.FirehoseDeliveryStream(
@@ -70,9 +70,11 @@ class Analytics(pulumi.ComponentResource):
             f"{name}DeliveryStreamPolicy",
             role=firehose_role.name,
             policy=get_firehose_role_policy_document(
-                region, account_idd, bucket.arn, delivery_stream.name
+                region, account_id, bucket.arn, delivery_stream.name
             ).apply(json.dumps),
         )
+
+        pinpoint_app = pinpoint.App(f"{name}PinpointApp")
 
         pinpoint_stream_role = iam.Role(
             f"{name}PinpointStreamRole",
@@ -83,14 +85,9 @@ class Analytics(pulumi.ComponentResource):
             f"{name}PinpointStreamPolicy",
             role=pinpoint_stream_role.name,
             policy=get_pinpoint_stream_role_policy_document(
-                region, account_idd, delivery_stream.name
+                region, account_id, delivery_stream.name, pinpoint_app.application_id
             ).apply(json.dumps),
             opts=ResourceOptions(depends_on=[pinpoint_stream_role, delivery_stream]),
-        )
-
-        pinpoint_app = pinpoint.App(
-            f"{name}PinpointApp",
-            opts=ResourceOptions(depends_on=[pinpoint_stream_role_policy]),
         )
 
         pinpoint_stream = pinpoint.EventStream(
