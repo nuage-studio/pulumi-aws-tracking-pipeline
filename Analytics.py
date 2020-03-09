@@ -1,6 +1,7 @@
 import json
 
 import pulumi
+from DelayResource import Delay
 from firehosePolicy import (
     get_firehose_role_policy_document,
     get_firehose_role_trust_policy_document,
@@ -94,18 +95,20 @@ class Analytics(pulumi.ComponentResource):
             opts=ResourceOptions(depends_on=[pinpoint_stream_role, delivery_stream]),
         )
 
+        # IAM roles can take time to propogate so we have to add an artificial delay
+        pinpoint_stream_role_delay = Delay(
+            "EventStreamRoleDelay",
+            10,
+            opts=ResourceOptions(depends_on=[pinpoint_stream_role_policy]),
+        )
+
         pinpoint_stream = pinpoint.EventStream(
             f"{name}PinpointEventStream",
             application_id=pinpoint_app.application_id,
             destination_stream_arn=delivery_stream.arn,
             role_arn=pinpoint_stream_role.arn,
             opts=ResourceOptions(
-                depends_on=[
-                    delivery_stream,
-                    pinpoint_app,
-                    pinpoint_stream_role,
-                    pinpoint_stream_role_policy,
-                ]
+                depends_on=[delivery_stream, pinpoint_app, pinpoint_stream_role_delay,]
             ),
         )
 
