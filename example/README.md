@@ -10,7 +10,7 @@ To launch the website:
 
 * Run `npm install`
 * Run `amplify init`, for which you can accept defaults and call your environment `dev`.
-* Run `amplify push`, which will create backend resources including a Cognito Identity Pool.
+* Run `amplify push`, which will create a Cognito Identity Pool.
 * Update the configuration in `app.js` to use your Pinpoint appliction and the Identity Pool created in the last step.
 * Update the role used by the Identity Pool for unauthenticated identities so that it can create events in Pinpoint.
 * Run `npm start` and visit `localhost:8080` in your web browser.  Click the button to generate an event.
