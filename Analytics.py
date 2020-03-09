@@ -16,6 +16,10 @@ from pulumi_aws.get_caller_identity import get_caller_identity
 
 
 class Analytics(pulumi.ComponentResource):
+    """
+    The `nuage:aws:Analytics` creates Pinpoint application which pushes analytic events
+    into an S3 bucket via a Kinesis Firehose.
+    """
 
     bucket_name: Output[str]
     """
