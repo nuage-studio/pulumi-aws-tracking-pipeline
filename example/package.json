@@ -1,0 +1,20 @@
+{
+  "name": "aws-tracking-amplify-example",
+  "version": "1.0.0",
+  "description": "Nuage Tracking Pipeline Amplify Example",
+  "dependencies": {
+    "@aws-amplify/api": "latest",
+    "@aws-amplify/pubsub": "latest",
+    "aws-amplify": "latest"
+  },
+  "devDependencies": {
+    "webpack": "^4.17.1",
+    "webpack-cli": "^3.1.0",
+    "copy-webpack-plugin": "^4.5.2",
+    "webpack-dev-server": "^3.1.5"
+  },
+  "scripts": {
+    "start": "webpack && webpack-dev-server --host 0.0.0.0 --mode development",
+    "build": "webpack"
+  }
+}
