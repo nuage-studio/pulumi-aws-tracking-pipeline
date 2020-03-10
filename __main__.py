@@ -1,8 +1,8 @@
 import json
 
 import pulumi
-from Analytics import Analytics
-from identityPoolPolicy import (
+from analytics import Analytics
+from identity_pool_policy import (
     get_unauthenticated_role_policy_document,
     get_unauthenticated_role_trust_policy_document,
 )

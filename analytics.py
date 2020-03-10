@@ -1,12 +1,12 @@
 import json
 
 import pulumi
-from DelayResource import Delay
-from firehosePolicy import (
+from delay_resource import Delay
+from firehose_policy import (
     get_firehose_role_policy_document,
     get_firehose_role_trust_policy_document,
 )
-from pinpointPolicy import (
+from pinpoint_policy import (
     get_pinpoint_stream_role_policy_document,
     get_pinpoint_stream_role_trust_policy_document,
 )
