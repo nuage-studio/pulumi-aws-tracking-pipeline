@@ -1,11 +1,11 @@
 import Analytics from '@aws-amplify/analytics';
 import Auth from '@aws-amplify/auth';
 
-// Enter your Cognito and Pinpoint configuration below:
+//--- Enter your Cognito and Pinpoint configuration below: ---
 
 Auth.configure({
 	Auth: {
-		identityPoolId: 'your-identity-pool',
+		identityPoolId: 'your-identity-pool-id',
 		region: 'your-region'
 	}
 })
@@ -18,7 +18,7 @@ Analytics.configure({
 	}
 })
 
-///
+//------------------------------------------------------------
 
 document.getElementById('MutationEventButton').addEventListener('click', (evt) => {
 
