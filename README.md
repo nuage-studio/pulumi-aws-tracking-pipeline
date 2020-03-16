@@ -13,12 +13,20 @@ Kinesis Firehose.
 
 ## Getting started
 
-You need Python 3 (preferably 3.8) and Pulumi (preferably 1.12.0) installed to start working on this project.
+You need Python 3 (at least 3.7, preferably 3.8) and Pulumi (preferably 1.12.0) installed to start working on this project.
 
 In order to install your virtualenv, just go to the root of the project and:
 ```bash
 make install
 ```
+
+This project also depends on the [`pulumi-google-tag-manager`](https://github.com/nuage-studio/pulumi-google-tag-manager/) project, which you can install into your Pulumi project from a local folder:
+
+```
+pip install -e /path/to/pulumi_google_tag_manager
+```
+
+As per the [`README.md`](https://github.com/nuage-studio/pulumi-google-tag-manager/blob/master/README.md) in the Tag Manager project, you will also need to add your Google credentials to your Pulumi config.
 
 ## IDE
 

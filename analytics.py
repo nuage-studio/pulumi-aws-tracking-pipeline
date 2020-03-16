@@ -14,6 +14,16 @@ from pulumi.output import Output
 from pulumi.resource import ResourceOptions
 from pulumi_aws import config, iam, kinesis, pinpoint, s3
 from pulumi_aws.get_caller_identity import get_caller_identity
+from pulumi_google_tag_manager.dynamic_providers.gtm import (
+    Container,
+    ContainerArgs,
+    Workspace,
+    WorkspaceArgs,
+)
+from pulumi_google_tag_manager.dynamic_providers.gtm.custom_html_tag import (
+    CustomHtmlTag,
+    CustomHtmlTagArgs,
+)
 
 
 class Analytics(pulumi.ComponentResource):
@@ -47,7 +57,27 @@ class Analytics(pulumi.ComponentResource):
     The Application ID of the Pinpoint application for managing analytics.
     """
 
-    def __init__(self, name, opts=None):
+    gtm_container_id: Output[str]
+    """
+    The ID of the Google Tag Manager container
+    """
+
+    gtm_tag: Output[str]
+    """
+    The Google Tag Manager tag which is placed in an HTML `<head>`
+    """
+
+    gtm_tag_no_script: Output[str]
+    """
+    The Google Tag Manager tag which is placed inside the HTML `<body>`
+    """
+
+    amplify_tag_id: Output[str]
+    """
+    The ID of the Custom HTML tag in GTM which passes analytics to Amplify
+    """
+
+    def __init__(self, name, should_create_gtm_tag=True, opts=None):
         super().__init__("nuage:aws:Analytics", name, None, opts)
 
         account_id = get_caller_identity().account_id
@@ -112,15 +142,30 @@ class Analytics(pulumi.ComponentResource):
             ),
         )
 
-        self.set_outputs(
-            {
-                "bucket_name": bucket.id,
-                "delivery_stream_name": delivery_stream.name,
-                "destination_stream_arn": delivery_stream.arn,
-                "pinpoint_application_name": pinpoint_app.name,
-                "pinpoint_application_id": pinpoint_app.application_id,
+        outputs = {
+            "bucket_name": bucket.id,
+            "delivery_stream_name": delivery_stream.name,
+            "destination_stream_arn": delivery_stream.arn,
+            "pinpoint_application_name": pinpoint_app.name,
+            "pinpoint_application_id": pinpoint_app.application_id,
+            "gtm_container_id": None,
+            "gtm_tag": None,
+            "gtm_tag_no_script": None,
+            "amplify_tag_id": None,
+        }
+
+        if should_create_gtm_tag:
+            (gtm_container, _, amplify_tag) = self.create_gtm_tag(name)
+
+            outputs = {
+                **outputs,
+                "gtm_container_id": gtm_container.container_id,
+                "gtm_tag": gtm_container.gtm_tag,
+                "gtm_tag_no_script": gtm_container.gtm_tag_noscript,
+                "amplify_tag_id": amplify_tag.tag_id,
             }
-        )
+
+        self.set_outputs(outputs)
 
     def set_outputs(self, outputs: dict):
         """
@@ -131,3 +176,31 @@ class Analytics(pulumi.ComponentResource):
             setattr(self, output_name, outputs[output_name])
 
         self.register_outputs(outputs)
+
+    def create_gtm_tag(self, name):
+
+        gtm_account_id = pulumi.Config().require("gtm_account_id")
+
+        container = Container(
+            f"{name}Container",
+            args=ContainerArgs(
+                account_id=gtm_account_id, container_name=f"{name}Container",
+            ),
+        )
+        workspace = Workspace(
+            f"{name}Workspace",
+            args=WorkspaceArgs(
+                container_path=container.path, workspace_name=f"{name}Workspace"
+            ),
+        )
+
+        custom_tag = CustomHtmlTag(
+            f"{name}AmplifyTag",
+            args=CustomHtmlTagArgs(
+                workspace_path=workspace.path,
+                tag_name=f"{name}AmplifyTag",
+                html="<p>This is a test</p>",
+            ),
+        )
+
+        return (container, workspace, custom_tag)
