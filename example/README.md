@@ -8,6 +8,9 @@ To launch the website:
 
 * Run the Pulumi program in the root of this project, such that it presents a list of outputs.
 * Update the configuration in `app.js` to use your Pinpoint appliction and the Identity Pool created in the last step.
+* Copy the GTM tags into the appropriate places in `index.html`
+* In the GTM web interface, add a Customer Event trigger to the newly generated custom
+   tag called `AmplifyAnalyticsEvent`
 * Run `npm install`
 * Run `npm start` and visit `localhost:8080` in your web browser.  Click the button to generate an event.
 

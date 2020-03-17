@@ -29,7 +29,10 @@ from pulumi_google_tag_manager.dynamic_providers.gtm.custom_html_tag import (
 class Analytics(pulumi.ComponentResource):
     """
     The `nuage:aws:Analytics` creates Pinpoint application which pushes analytic events
-    into an S3 bucket via a Kinesis Firehose.
+    into an S3 bucket via a Kinesis Firehose.  It can also optionally create a
+    Google Tag Manager container with a custom tag for calling Amplify.  The custom
+    tag calls a function named `window.amplify_tag_callback` and passes in the
+    `dataLayer` event which triggered the tag.
     """
 
     bucket_name: Output[str]
@@ -199,7 +202,7 @@ class Analytics(pulumi.ComponentResource):
             args=CustomHtmlTagArgs(
                 workspace_path=workspace.path,
                 tag_name=f"{name}AmplifyTag",
-                html="<p>This is a test</p>",
+                html="<script>window.amplify_tag_callback(window.dataLayer[window.dataLayer.length-1])</script>",
             ),
         )
 

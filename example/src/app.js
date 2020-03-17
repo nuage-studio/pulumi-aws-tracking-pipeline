@@ -26,14 +26,24 @@ document.getElementById('MutationEventButton').addEventListener('click', (evt) =
 
 	resultElement.innerHTML = `Recording event... `;
 
-	Analytics.record({
-		name: 'NuageTest',
-		attributes: { field1: 'The button was clicked', field2: 'Value2' }
-	}).then(r => {
+	window.dataLayer = window.dataLayer || [];
+	window.dataLayer.push({
+	  event: 'AmplifyAnalyticsEvent',
+	  data: {
+		  'field1': 123,
+		  'field2': 'hello world'
+	  }
+	});
+});
+
+window.amplify_tag_callback = event => {
+	console.log("Sending event to Amplify Analytics:", event)
+
+	Analytics.record(event.data).then(r => {
 		resultElement.innerHTML += "Success"
 	})
 	.catch(e => {
+		console.log("Error:", e)
 		resultElement.innerHTML += "An error occurred"
-		console.log("ERROR", e)
 	})
-});
+}
