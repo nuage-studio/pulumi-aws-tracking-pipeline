@@ -28,18 +28,21 @@ document.getElementById('MutationEventButton').addEventListener('click', (evt) =
 
 	window.dataLayer = window.dataLayer || [];
 	window.dataLayer.push({
-	  event: 'AmplifyAnalyticsEvent',
-	  data: {
-		  'field1': 123,
-		  'field2': 'hello world'
-	  }
+	  	event: 'AmplifyAnalyticsEvent',
+		analyticsData: {
+			name: 'NuageTest',
+			attributes: { field1: 'value1', field2: 'value2' }
+		}
 	});
 });
 
 window.amplify_tag_callback = event => {
 	console.log("Sending event to Amplify Analytics:", event)
 
-	Analytics.record(event.data).then(r => {
+	const resultElement = document.getElementById('MutationResult')
+
+	Analytics.record(event.analyticsData).then(() => {
+		console.log("Analytics sent successfully")
 		resultElement.innerHTML += "Success"
 	})
 	.catch(e => {
