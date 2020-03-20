@@ -1,5 +1,3 @@
-Pulumi.*.yaml
-
 *.pyc
 
 # Byte-compiled / optimized / DLL files
