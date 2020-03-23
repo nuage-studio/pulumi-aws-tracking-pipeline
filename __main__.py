@@ -16,6 +16,7 @@ as well as a Cognito Identity Pool which allows anonymous authentication.  This
 stack can be used to power the example website in the `example` folder.
 """
 
+
 analytics = Analytics("MyAnalytics")
 
 identity_pool = cognito.IdentityPool(
@@ -52,3 +53,6 @@ pulumi.export("delivery_stream_arn", analytics.destination_stream_arn)
 pulumi.export("pinpoint_application_name", analytics.pinpoint_application_name)
 pulumi.export("pinpoint_application_id", analytics.pinpoint_application_id)
 pulumi.export("identity_pool_id", identity_pool.id)
+pulumi.export("gtm_tag", analytics.gtm_tag)
+pulumi.export("gtm_tag_no_script", analytics.gtm_tag_no_script)
+pulumi.export("amplify_tag_id", analytics.amplify_tag_id)
