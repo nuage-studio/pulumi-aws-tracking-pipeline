@@ -30,10 +30,11 @@ class Analytics(pulumi.ComponentResource):
     """
     The `nuage:aws:Analytics` creates Pinpoint application which pushes analytic events
     into an S3 bucket via a Kinesis Firehose.  It can also optionally create a
-    Google Tag Manager container with a custom tag for calling Amplify.  The custom
-    tag will fetch the `dataLayer` event which triggered the tag, which should have an
-    `analyticsEvent` member.  The tag then calls a function named `Analytics` which MUST
-    be present on the `window` with the analytics event.
+    Google Tag Manager container with a custom tag for calling Amplify.
+    The custom tag will fetch the `dataLayer` event which triggered the tag, which
+    should have an `analyticsData` member.  The `analyticsData` is the structure which
+    is sent to the [Amplify `record` method](https://aws-amplify.github.io/amplify-js/api/classes/analyticsclass.html#record).
+    The tag then calls a function named `Analytics` - which MUST be present on the `window` - with the analytics event.
     """
 
     bucket_name: Output[str]
