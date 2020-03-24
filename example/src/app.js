@@ -1,6 +1,9 @@
 import Analytics from '@aws-amplify/analytics';
 import Auth from '@aws-amplify/auth';
 
+// The custom tag requires the Analytics function to exist on the window
+window.Analytics = Analytics
+
 //--- Enter your Cognito and Pinpoint configuration below: ---
 
 Auth.configure({
@@ -35,18 +38,3 @@ document.getElementById('MutationEventButton').addEventListener('click', (evt) =
 		}
 	});
 });
-
-window.amplify_tag_callback = event => {
-	console.log("Sending event to Amplify Analytics:", event)
-
-	const resultElement = document.getElementById('MutationResult')
-
-	Analytics.record(event.analyticsData).then(() => {
-		console.log("Analytics sent successfully")
-		resultElement.innerHTML += "Success"
-	})
-	.catch(e => {
-		console.log("Error:", e)
-		resultElement.innerHTML += "An error occurred"
-	})
-}
