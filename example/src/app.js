@@ -20,21 +20,3 @@ Analytics.configure({
 		mandatorySignIn: false,
 	}
 })
-
-//------------------------------------------------------------
-
-document.getElementById('MutationEventButton').addEventListener('click', (evt) => {
-
-	const resultElement = document.getElementById('MutationResult')
-
-	resultElement.innerHTML = `Recording event... `;
-
-	window.dataLayer = window.dataLayer || [];
-	window.dataLayer.push({
-	  	event: 'AmplifyAnalyticsEvent',
-		analyticsData: {
-			name: 'NuageTest',
-			attributes: { field1: 'value1', field2: 'value2' }
-		}
-	});
-});

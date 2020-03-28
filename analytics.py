@@ -25,16 +25,28 @@ from pulumi_google_tag_manager.dynamic_providers.gtm.custom_html_tag import (
     CustomHtmlTagArgs,
 )
 
+amplify_tag_html = """
+<script>
+  window.Analytics.record({
+    name: {{Event}},
+    attributes: {
+        hostname: {{Page Hostname}},
+        page_path:{{Page Path}},
+        page_url: {{Page URL}},
+        referrer: {{Referrer}}
+    }
+  }).catch(function(e) { console.error("Amplify Tag Error:" , e) })
+</script>
+"""
+
 
 class Analytics(pulumi.ComponentResource):
     """
     The `nuage:aws:Analytics` creates Pinpoint application which pushes analytic events
     into an S3 bucket via a Kinesis Firehose.  It can also optionally create a
     Google Tag Manager container with a custom tag for calling Amplify.
-    The custom tag will fetch the `dataLayer` event which triggered the tag, which
-    should have an `analyticsData` member.  The `analyticsData` is the structure which
-    is sent to the [Amplify `record` method](https://aws-amplify.github.io/amplify-js/api/classes/analyticsclass.html#record).
-    The tag then calls a function named `Analytics` - which MUST be present on the `window` - with the analytics event.
+    The custom tag will record GTM events by calling a function named `Analytics` which
+    MUST be present on the `window`.
     """
 
     bucket_name: Output[str]
@@ -204,7 +216,7 @@ class Analytics(pulumi.ComponentResource):
             args=CustomHtmlTagArgs(
                 workspace_path=workspace.path,
                 tag_name=f"{name}AmplifyTag",
-                html="<script>window.Analytics.record(window.dataLayer[window.dataLayer.length-1].analyticsData)</script>",
+                html=amplify_tag_html,
             ),
         )
 
