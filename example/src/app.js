@@ -20,3 +20,17 @@ Analytics.configure({
 		mandatorySignIn: false,
 	}
 })
+
+//------------------------------------------------------------
+
+document.getElementById('EventButton').addEventListener('click', (evt) => {
+	let search_data = document.getElementById("DataInput").value
+
+	window.dataLayer = window.dataLayer || [];
+	window.dataLayer.push({
+		  event: 'MyAnalyticsEventTrigger',
+		  search_field: search_data
+	});
+
+	alert("Analytic event triggered")
+});

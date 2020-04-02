@@ -4,6 +4,7 @@
 
         <!-- Place your GTM tag here -->
 
+
         <meta charset="utf-8">
         <title>Amplify Framework</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -15,8 +16,10 @@
             .app-header { color: white; text-align: center; background: linear-gradient(30deg, #f90 55%, #FFC300); width: 100%; margin: 0 0 1em 0; padding: 3em 0 3em 0; box-shadow: 1px 2px 4px rgba(0, 0, 0, .3); }
             .app-logo { width: 126px; margin: 0 auto; }
             .app-body { width: 400px; margin: 0 auto; text-align: center; }
-            .app-body button { background-color: #FF9900; font-size: 14px; color: white; text-transform: uppercase; padding: 1em; border: none; }
+            .app-body button { background-color: #FF9900; font-size: 14px; color: white; text-transform: uppercase; padding: 1em; border: none; height: 46px }
             .app-body button:hover { opacity: 0.8; }
+            input { height: 39px }
+            input::placeholder { text-transform: uppercase }
         </style>
     </head>
     <body>
@@ -30,10 +33,8 @@
                 <h1>Welcome to the Amplify Framework</h1>
             </div>
             <div class="app-body">
-                <button id="MutationEventButton">Add data</button>
-                <div id="MutationResult"></div>
-                <div id="QueryResult"></div>
-                <div id="SubscriptionResult"></div>
+                <input id="DataInput" type="text" placeholder="Search query" />
+                <button id="EventButton">Search</button>
             </div>
         </div>
         <script src="main.bundle.js"></script>

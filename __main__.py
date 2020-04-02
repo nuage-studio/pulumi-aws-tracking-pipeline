@@ -12,12 +12,13 @@ from pulumi_aws.get_caller_identity import get_caller_identity
 
 """
 This is an example Pulumi program which creates a Nuage Analytics pipeline component,
-as well as a Cognito Identity Pool which allows anonymous authentication.  This
-stack can be used to power the example website in the `example` folder.
+as well as a Cognito Identity Pool which allows anonymous authentication.  The pipeline
+creates a GTM tag and a variable called `search_field` in order to power the example
+website in the `example` folder.
 """
 
 
-analytics = Analytics("MyAnalytics")
+analytics = Analytics("MyAnalytics", gtm_variables=["search_field"])
 
 identity_pool = cognito.IdentityPool(
     "MyAnalyticsIdentityPool",
@@ -56,3 +57,4 @@ pulumi.export("identity_pool_id", identity_pool.id)
 pulumi.export("gtm_tag", analytics.gtm_tag)
 pulumi.export("gtm_tag_no_script", analytics.gtm_tag_no_script)
 pulumi.export("amplify_tag_id", analytics.amplify_tag_id)
+pulumi.export("event_name", analytics.event_name)
