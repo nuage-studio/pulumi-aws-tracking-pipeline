@@ -1,7 +1,8 @@
 from typing import List, Tuple
 
 import pulumi
-from pulumi.output import Output
+from pulumi.output import Input, Output
+from pulumi_google_tag_manager.dynamic_providers.ga import WebProperty, WebPropertyArgs
 from pulumi_google_tag_manager.dynamic_providers.gtm import (
     Container,
     ContainerArgs,
@@ -9,6 +10,7 @@ from pulumi_google_tag_manager.dynamic_providers.gtm import (
     CustomHtmlTag,
     CustomHtmlTagArgs,
     DataLayerVariable,
+    GAEventTag,
     Workspace,
     WorkspaceArgs,
 )
@@ -62,15 +64,13 @@ class GtmAnalytics(pulumi.ComponentResource):
     The ID of the data layer variable for passing analytic event data
     """
 
-    def __init__(self, name, opts=None):
-        """
-        :param gtm_variables: A list of data layer variables to create in GTM.  A GA
-                event tag will be created for each of these variables, and the variables
-                will also be passed into Amplify on each event.
-        """
+    def __init__(
+        self, name: str, site_name: Input[str], site_url: Input[str], opts=None
+    ):
         super().__init__("nuage:aws:GtmAnalytics", name, None, opts)
 
         gtm_account_id = pulumi.Config().require("gtm_account_id")
+        ga_account_id = pulumi.Config().require("ga_account_id")
 
         container = Container(
             f"{name}Container",
@@ -103,6 +103,8 @@ class GtmAnalytics(pulumi.ComponentResource):
             workspace_path=workspace.path,
         )
 
+        # Amplify tag
+
         amplify_tag = CustomHtmlTag(
             f"{name}AmplifyTag",
             args=CustomHtmlTagArgs(
@@ -113,11 +115,32 @@ class GtmAnalytics(pulumi.ComponentResource):
             ),
         )
 
+        # Google Analytics tag
+
+        web_property = WebProperty(
+            f"{name}WebProperty",
+            args=WebPropertyArgs(
+                account_id=ga_account_id, site_name=site_name, site_url=site_url,
+            ),
+        )
+
+        event_tag = GAEventTag(
+            f"{name}GAEventTag",
+            workspace_path=workspace.path,
+            tag_name=f"{name}GAEventTag",
+            tracking_id=web_property.tracking_id,
+            event_category="{{Event}}",
+            event_action="{{" + EVENT_VARIABLE_NAME + "}}",
+            event_value="{{" + DATA_VARIABLE_NAME + "}}",
+            firing_trigger_id=[event_trigger.trigger_id],
+        )
+
         outputs = {
             "container_id": container.container_id,
             "tag": container.gtm_tag,
             "tag_no_script": container.gtm_tag_noscript,
             "amplify_tag_id": amplify_tag.tag_id,
+            "ga_event_tag_id": event_tag.tag_id,
             "event_name": event_trigger.trigger_name,
             "event_variable_id": event_variable.variable_id,
             "data_variable_id": data_variable.variable_id,

@@ -1,6 +1,6 @@
 # Amplify Analytics Example
 
-This project contains a simple JavaScript website using the Amplify library which sends test events to an AWS Pinpoint application, such as the one created by the `nuage:aws:Analytics` component.
+This project contains a simple JavaScript website using the Amplify library which sends test events to an AWS Pinpoint application and a Google Analytics property, such as the ones created by the `nuage:aws:Analytics` component.
 
 To run this example you will need node.js version 12 or higher.  You will also need the AWS CLI (with correctly configured credentials) and the [Amplify CLI](https://aws-amplify.github.io/docs/).
 
@@ -16,14 +16,13 @@ To launch the website:
 Note the following code which actually triggers the event:
 
 ```javascript
-	window.dataLayer = window.dataLayer || [];
 	window.dataLayer.push({
 		  event: 'MyAnalyticsEventTrigger',
-		  search_field: search_data
+		  analytics_event: "search",
+		  analytics_data: search_query
 	});
 ```
 
-Both the event name and the `search_field` key are dependent upon the Pulumi
-configuration.  The former must be set to the `event_name` output, while the latter
-can be configured using the `gtm_variables` parameter which is passed to the
-`Analytics` constructor.  Any number of variables can be added.
+Notice that event name is the same as the `event_name` Pulumi output.  The
+`analytics_event` and `analytics_data` are the event name and associated value which
+are sent to Google Analytics and AWS Amplify.

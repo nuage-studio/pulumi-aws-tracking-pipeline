@@ -18,7 +18,9 @@ website in the `example` folder.
 """
 
 
-analytics = Analytics("MyAnalytics")
+analytics = Analytics(
+    "MyAnalytics", site_name="MyAnalyticsExampleSite", site_url="http://example.com"
+)
 
 identity_pool = cognito.IdentityPool(
     "MyAnalyticsIdentityPool",

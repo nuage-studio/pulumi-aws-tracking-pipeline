@@ -11,7 +11,7 @@ from pinpoint_policy import (
     get_pinpoint_stream_role_policy_document,
     get_pinpoint_stream_role_trust_policy_document,
 )
-from pulumi.output import Output
+from pulumi.output import Input, Output
 from pulumi.resource import ResourceOptions
 from pulumi_aws import config, iam, kinesis, pinpoint, s3
 from pulumi_aws.get_caller_identity import get_caller_identity
@@ -76,10 +76,21 @@ class Analytics(pulumi.ComponentResource):
     The name of the GTM event trigger which will cause the Amplify tag to fire
     """
 
-    def __init__(self, name, should_create_gtm_tag=True, opts=None):
+    def __init__(
+        self,
+        name,
+        should_create_gtm_tag=True,
+        site_name: Input[str] = None,
+        site_url: Input[str] = None,
+        opts=None,
+    ):
         """
         :param should_create_gtm_tag: Whether or not a GTM environment should be created
-                with a tag for calling Amplify.
+                with a tag for calling Amplify and Google Analytics.
+        :param site_name: The website name used for the Google Analytics property.  If
+                `should_create_gtm_tag` is `True`, this is required.
+        :param site_url: The website URL used for the Google Analytics property.  If
+                `should_create_gtm_tag` is `True`, this is required.
         """
         super().__init__("nuage:aws:Analytics", name, None, opts)
 
@@ -159,7 +170,14 @@ class Analytics(pulumi.ComponentResource):
         }
 
         if should_create_gtm_tag:
-            gtm = GtmAnalytics(name)
+
+            if site_name is None:
+                raise Exception("The site_name parameter is required for the GTM tag")
+
+            if site_url is None:
+                raise Exception("The site_url parameter is required for the GTM tag")
+
+            gtm = GtmAnalytics(name, site_name, site_url)
 
             outputs = {
                 **outputs,
