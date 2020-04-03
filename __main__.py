@@ -18,7 +18,7 @@ website in the `example` folder.
 """
 
 
-analytics = Analytics("MyAnalytics", gtm_variables=["search_field"])
+analytics = Analytics("MyAnalytics")
 
 identity_pool = cognito.IdentityPool(
     "MyAnalyticsIdentityPool",

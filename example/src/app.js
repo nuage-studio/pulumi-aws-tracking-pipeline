@@ -24,12 +24,13 @@ Analytics.configure({
 //------------------------------------------------------------
 
 document.getElementById('EventButton').addEventListener('click', (evt) => {
-	let search_data = document.getElementById("DataInput").value
+	let search_query = document.getElementById("DataInput").value
 
 	window.dataLayer = window.dataLayer || [];
 	window.dataLayer.push({
 		  event: 'MyAnalyticsEventTrigger',
-		  search_field: search_data
+		  analytics_event: "search",
+		  analytics_data: search_query
 	});
 
 	alert("Analytic event triggered")

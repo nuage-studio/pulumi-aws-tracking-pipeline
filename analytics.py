@@ -1,5 +1,4 @@
 import json
-from typing import List, Tuple
 
 import pulumi
 from delay_resource import Delay
@@ -7,6 +6,7 @@ from firehose_policy import (
     get_firehose_role_policy_document,
     get_firehose_role_trust_policy_document,
 )
+from gtm_analytics import GtmAnalytics
 from pinpoint_policy import (
     get_pinpoint_stream_role_policy_document,
     get_pinpoint_stream_role_trust_policy_document,
@@ -15,25 +15,15 @@ from pulumi.output import Output
 from pulumi.resource import ResourceOptions
 from pulumi_aws import config, iam, kinesis, pinpoint, s3
 from pulumi_aws.get_caller_identity import get_caller_identity
-from pulumi_google_tag_manager.dynamic_providers.gtm import (
-    Container,
-    ContainerArgs,
-    CustomEventTrigger,
-    CustomHtmlTag,
-    CustomHtmlTagArgs,
-    DataLayerVariable,
-    Workspace,
-    WorkspaceArgs,
-)
 
 
 class Analytics(pulumi.ComponentResource):
     """
-    The `nuage:aws:Analytics` creates Pinpoint application which pushes analytic events
-    into an S3 bucket via a Kinesis Firehose.  It can also optionally create a
-    Google Tag Manager container with a custom tag for calling Amplify.
-    The custom tag will record GTM events by calling a function named `Analytics` which
-    MUST be present on the `window`.
+    The `nuage:aws:Analytics` component creates Pinpoint application which pushes
+    analytic events into an S3 bucket via a Kinesis Firehose.  It can also optionally
+    create a Google Tag Manager container with a Google Analytics event tag, and
+    a custom tag for calling AWS Amplify.  The custom tag will record GTM events by
+    calling a function named `Analytics` which MUST be present on the `window`.
     """
 
     bucket_name: Output[str]
@@ -86,14 +76,10 @@ class Analytics(pulumi.ComponentResource):
     The name of the GTM event trigger which will cause the Amplify tag to fire
     """
 
-    def __init__(
-        self, name, should_create_gtm_tag=True, gtm_variables: List[str] = [], opts=None
-    ):
+    def __init__(self, name, should_create_gtm_tag=True, opts=None):
         """
         :param should_create_gtm_tag: Whether or not a GTM environment should be created
                 with a tag for calling Amplify.
-        :param gtm_variables: A list of data layer variables to create in GTM.  These
-                variables will also be passed into Amplify on each event.
         """
         super().__init__("nuage:aws:Analytics", name, None, opts)
 
@@ -169,20 +155,19 @@ class Analytics(pulumi.ComponentResource):
             "gtm_tag": None,
             "gtm_tag_no_script": None,
             "amplify_tag_id": None,
+            "event_name": None,
         }
 
         if should_create_gtm_tag:
-            (gtm_container, _, event_trigger, amplify_tag) = self.create_gtm_tag(
-                name, gtm_variables
-            )
+            gtm = GtmAnalytics(name)
 
             outputs = {
                 **outputs,
-                "gtm_container_id": gtm_container.container_id,
-                "gtm_tag": gtm_container.gtm_tag,
-                "gtm_tag_no_script": gtm_container.gtm_tag_noscript,
-                "amplify_tag_id": amplify_tag.tag_id,
-                "event_name": event_trigger.trigger_name,
+                "gtm_container_id": gtm.container_id,
+                "gtm_tag": gtm.tag,
+                "gtm_tag_no_script": gtm.tag_no_script,
+                "amplify_tag_id": gtm.amplify_tag_id,
+                "event_name": gtm.event_name,
             }
 
         self.set_outputs(outputs)
@@ -196,68 +181,3 @@ class Analytics(pulumi.ComponentResource):
             setattr(self, output_name, outputs[output_name])
 
         self.register_outputs(outputs)
-
-    def create_gtm_tag(self, name, gtm_variables=[]):
-
-        gtm_account_id = pulumi.Config().require("gtm_account_id")
-
-        container = Container(
-            f"{name}Container",
-            args=ContainerArgs(
-                account_id=gtm_account_id, container_name=f"{name}Container",
-            ),
-        )
-        workspace = Workspace(
-            f"{name}Workspace",
-            args=WorkspaceArgs(
-                container_path=container.path, workspace_name=f"{name}Workspace"
-            ),
-        )
-
-        for gtm_variable in gtm_variables:
-            variable = DataLayerVariable(
-                f"{name}_{gtm_variable}",
-                variable_name=gtm_variable,
-                workspace_path=workspace.path,
-            )
-
-        custom_event = CustomEventTrigger(
-            f"{name}EventTrigger",
-            trigger_name=f"{name}EventTrigger",
-            workspace_path=workspace.path,
-        )
-
-        custom_tag = CustomHtmlTag(
-            f"{name}AmplifyTag",
-            args=CustomHtmlTagArgs(
-                workspace_path=workspace.path,
-                tag_name=f"{name}AmplifyTag",
-                html=self.create_amplify_tag([(name, name) for name in gtm_variables]),
-                firing_trigger_id=[custom_event.trigger_id],
-            ),
-        )
-
-        return (container, workspace, custom_event, custom_tag)
-
-    def create_amplify_tag(self, variables: List[Tuple[str, str]] = []):
-
-        var_strings = [t[0] + ": {{" + t[1] + "}}," for t in variables]
-
-        return (
-            """
-<script>
-    window.Analytics.record({
-        name: {{Event}},
-        attributes: {
-            hostname: {{Page Hostname}},
-            page_path:{{Page Path}},
-            page_url: {{Page URL}},
-            referrer: {{Referrer}},
-            """
-            + "\n".join(var_strings)
-            + """
-        }
-    }).catch(function(e) { console.error("Amplify Tag Error:" , e) })
-</script>
-"""
-        )
