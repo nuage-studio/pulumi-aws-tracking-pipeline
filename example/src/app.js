@@ -23,18 +23,15 @@ Analytics.configure({
 
 //------------------------------------------------------------
 
-document.getElementById('MutationEventButton').addEventListener('click', (evt) => {
-
-	const resultElement = document.getElementById('MutationResult')
-
-	resultElement.innerHTML = `Recording event... `;
+document.getElementById('EventButton').addEventListener('click', (evt) => {
+	let search_query = document.getElementById("DataInput").value
 
 	window.dataLayer = window.dataLayer || [];
 	window.dataLayer.push({
-	  	event: 'AmplifyAnalyticsEvent',
-		analyticsData: {
-			name: 'NuageTest',
-			attributes: { field1: 'value1', field2: 'value2' }
-		}
+		  event: 'MyAnalyticsEventTrigger',
+		  analytics_event: "search",
+		  analytics_data: search_query
 	});
+
+	alert("Analytic event triggered")
 });

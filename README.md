@@ -2,9 +2,10 @@
 
 This project contains a Pulumi component named `nuage:aws:Analytics`.  The component
 creates Pinpoint application which pushes analytic events into an S3 bucket via a
-Kinesis Firehose.
+Kinesis Firehose.  It can also optionally create a Google Tag Manager environment with
+tags that record events with Google Analytics and AWS Amplify.
 
-* The `Analytics.py` file contains the `nuage:aws:Analytics` component.
+* The `analytics.py` file contains the `nuage:aws:Analytics` component.
 * The `__main__.py` file contains an example Pulumi program which deploys an `Analytics`
     component.
 * The `example` folder contains an Amplify website which sends analytics events to a
