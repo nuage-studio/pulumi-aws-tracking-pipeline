@@ -1,5 +1,4 @@
 config:
-  aws:profile: nuage
   aws:region: eu-west-1
   pulumi-aws-tracking-pipeline:google_api_key_file: "/home/rob/.gcm/Nuage-93b8b16fabf6.json"
   pulumi-aws-tracking-pipeline:gtm_account_id: "6000731907"
