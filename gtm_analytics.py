@@ -2,6 +2,7 @@ from typing import List, Tuple
 
 import pulumi
 from pulumi.output import Input, Output
+from pulumi.resource import ResourceOptions
 from pulumi_google_analytics.dynamic_providers import WebProperty, WebPropertyArgs
 from pulumi_google_tag_manager.dynamic_providers import (
     Container,
@@ -13,6 +14,7 @@ from pulumi_google_tag_manager.dynamic_providers import (
     GAEventTag,
     GAPageviewTag,
     PageviewTrigger,
+    Publish,
     Workspace,
     WorkspaceArgs,
 )
@@ -152,6 +154,29 @@ class GtmAnalytics(pulumi.ComponentResource):
             tag_name=f"{name}GAPageviewTag",
             tracking_id=web_property.tracking_id,
             firing_trigger_id=[pageview_trigger.trigger_id],
+        )
+
+        """
+        Warning: make sure you have read the documentation for the Publish resource.
+        This resource can cause Pulumi to enter a broken state if not used carefully.
+        """
+
+        publish = Publish(
+            f"{name}WorkspacePublish",
+            workspace_path=workspace.path,
+            opts=ResourceOptions(
+                depends_on=[
+                    container,
+                    workspace,
+                    event_variable,
+                    data_variable,
+                    event_trigger,
+                    pageview_trigger,
+                    amplify_tag,
+                    event_tag,
+                    pageview_tag,
+                ]
+            ),
         )
 
         outputs = {
