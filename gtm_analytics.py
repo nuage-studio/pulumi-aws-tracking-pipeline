@@ -2,8 +2,9 @@ from typing import List, Tuple
 
 import pulumi
 from pulumi.output import Input, Output
-from pulumi_google_tag_manager.dynamic_providers.ga import WebProperty, WebPropertyArgs
-from pulumi_google_tag_manager.dynamic_providers.gtm import (
+from pulumi.resource import ResourceOptions
+from pulumi_google_analytics.dynamic_providers import WebProperty, WebPropertyArgs
+from pulumi_google_tag_manager.dynamic_providers import (
     Container,
     ContainerArgs,
     CustomEventTrigger,
@@ -11,6 +12,9 @@ from pulumi_google_tag_manager.dynamic_providers.gtm import (
     CustomHtmlTagArgs,
     DataLayerVariable,
     GAEventTag,
+    GAPageviewTag,
+    PageviewTrigger,
+    Publish,
     Workspace,
     WorkspaceArgs,
 )
@@ -103,6 +107,12 @@ class GtmAnalytics(pulumi.ComponentResource):
             workspace_path=workspace.path,
         )
 
+        pageview_trigger = PageviewTrigger(
+            f"{name}PageviewTrigger",
+            trigger_name=f"{name}PageviewTrigger",
+            workspace_path=workspace.path,
+        )
+
         # Amplify tag
 
         amplify_tag = CustomHtmlTag(
@@ -111,11 +121,14 @@ class GtmAnalytics(pulumi.ComponentResource):
                 workspace_path=workspace.path,
                 tag_name=f"{name}AmplifyTag",
                 html=self.create_amplify_tag(),
-                firing_trigger_id=[event_trigger.trigger_id],
+                firing_trigger_id=[
+                    event_trigger.trigger_id,
+                    pageview_trigger.trigger_id,
+                ],
             ),
         )
 
-        # Google Analytics tag
+        # Google Analytics Pageview & Event tags
 
         web_property = WebProperty(
             f"{name}WebProperty",
@@ -133,6 +146,37 @@ class GtmAnalytics(pulumi.ComponentResource):
             event_action="{{" + EVENT_VARIABLE_NAME + "}}",
             event_value="{{" + DATA_VARIABLE_NAME + "}}",
             firing_trigger_id=[event_trigger.trigger_id],
+        )
+
+        pageview_tag = GAPageviewTag(
+            f"{name}GAPageviewTag",
+            workspace_path=workspace.path,
+            tag_name=f"{name}GAPageviewTag",
+            tracking_id=web_property.tracking_id,
+            firing_trigger_id=[pageview_trigger.trigger_id],
+        )
+
+        """
+        Warning: make sure you have read the documentation for the Publish resource.
+        This resource can cause Pulumi to enter a broken state if not used carefully.
+        """
+
+        publish = Publish(
+            f"{name}WorkspacePublish",
+            workspace_path=workspace.path,
+            opts=ResourceOptions(
+                depends_on=[
+                    container,
+                    workspace,
+                    event_variable,
+                    data_variable,
+                    event_trigger,
+                    pageview_trigger,
+                    amplify_tag,
+                    event_tag,
+                    pageview_tag,
+                ]
+            ),
         )
 
         outputs = {
@@ -165,7 +209,7 @@ class GtmAnalytics(pulumi.ComponentResource):
     window.Analytics.record({
         name: {{"""
             + EVENT_VARIABLE_NAME
-            + """}},
+            + """}} || {{Event}},
         attributes: {
             hostname: {{Page Hostname}},
             page_path:{{Page Path}},
